@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>爱做操 · 本地动作播放器</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" id="brand-home" aria-label="爱做操首页">
+          <span class="brand-mark">爱</span>
+          <span><strong>爱做操</strong><small>每天动一动，身体轻一点</small></span>
+        </a>
+        <div class="topbar-actions">
+          <span class="local-pill"><span class="status-dot"></span> 本地工作区</span>
+        </div>
+      </header>
+
+      <main id="home-view" class="page-view home-view">
+        <section class="home-heading">
+          <div>
+            <div class="eyebrow">MY ROUTINES</div>
+            <h1>今天，做哪一套？</h1>
+            <p>选择一套操直接开始，或者编辑动作顺序和节奏。</p>
+          </div>
+          <div class="home-heading-actions"><button class="primary-button" id="ai-routine-main" type="button">AI 帮我编一套</button><button class="primary-button" id="new-routine-main" type="button"><span>＋</span> 新建一套操</button></div>
+        </section>
+        <section class="routine-grid" id="routine-grid" aria-live="polite"></section>
+        <section class="home-empty" id="routine-empty" hidden>
+          <div class="empty-mark">＋</div>
+          <h2>还没有自定义的操</h2>
+          <p>从已有动作小节开始，组合一套适合自己的操。</p>
+          <button class="primary-button" id="new-routine-empty" type="button">新建一套操</button>
+        </section>
+      </main>
+
+      <main id="editor-view" class="page-view editor-view" hidden>
+        <section class="editor-heading">
+          <div class="editor-heading-left">
+            <button class="back-button" id="back-home" type="button" aria-label="返回首页">‹</button>
+            <div>
+              <div class="eyebrow">ROUTINE EDITOR</div>
+              <div class="title-input-row">
+                <input id="routine-name" maxlength="32" value="测试操" aria-label="操名称">
+                <span class="routine-type-label" id="editor-routine-type">普通体操</span>
+              </div>
+            </div>
+          </div>
+          <div class="editor-actions">
+            <button class="quiet-button" id="cancel-edit" type="button">取消</button>
+            <button class="primary-button compact" id="save-routine" type="button">保存操</button>
+          </div>
+        </section>
+
+        <section class="editor-layout">
+          <div class="editor-main">
+            <div class="section-heading">
+              <div><h2>这套操</h2><p>拖动调整顺序，设置每个小节的节奏。</p></div>
+              <span class="item-count" id="editor-item-count">0 个小节</span>
+            </div>
+            <div class="editor-list" id="editor-list"></div>
+            <div class="editor-empty" id="editor-empty" hidden>从右侧动作库添加动作小节</div>
+            <section class="music-settings">
+              <div class="section-heading"><div><h2>背景音乐</h2><p>整套操使用同一首音乐并循环播放。</p></div><span class="music-bpm" id="music-bpm">可选</span></div>
+              <div class="music-settings-grid">
+                <label class="music-field wide">选择音乐<select id="routine-music"><option value="">无背景音乐</option></select><button class="music-preview-button" id="preview-music" type="button" disabled>按住试听</button></label>
+                <label class="music-field">本套音乐音量<input id="routine-music-volume" type="range" min="0" max="1" step="0.05" value="0.5"><output id="routine-music-volume-output">50%</output></label>
+              </div>
+              <p class="music-attribution" id="music-attribution">未选择背景音乐</p>
+            </section>
+          </div>
+          <aside class="period-browser">
+            <div class="section-heading browser-heading">
+              <div><h2>动作小节</h2><p>系统提供，内容不可修改。</p></div>
+              <span class="item-count" id="period-count">0</span>
+            </div>
+            <div class="browser-list" id="browser-list"></div>
+          </aside>
+        </section>
+      </main>
+
+      <dialog id="routine-type-dialog" class="routine-type-dialog">
+        <div class="dialog-heading"><div class="eyebrow">NEW ROUTINE</div><h2>新建一套操</h2><p>类型创建后不可修改，只能添加同类型的动作小节。</p></div>
+        <div class="routine-type-options">
+          <button class="routine-type-option normal" type="button" data-new-routine-type="普通体操"><span class="type-option-mark">体</span><span><strong>新建普通体操</strong><small>肩颈、脊柱和全身舒展动作</small></span><b>›</b></button>
+          <button class="routine-type-option eyes" type="button" data-new-routine-type="眼保健操"><span class="type-option-mark">眼</span><span><strong>新建眼保健操</strong><small>眼部放松与精细手部动作</small></span><b>›</b></button>
+        </div>
+        <button class="dialog-cancel" id="cancel-new-routine" type="button">取消</button>
+      </dialog>
+
+      <dialog id="ai-wizard-dialog" class="ai-wizard-dialog">
+        <div class="ai-wizard-top"><div class="eyebrow">AI ROUTINE MAKER</div><button id="ai-wizard-close" class="dialog-close" type="button" aria-label="关闭">×</button></div>
+        <div id="ai-wizard-form">
+          <div class="ai-step-indicator"><span id="ai-step-count">1 / 3</span><span id="ai-step-name">使用场景</span></div>
+          <div class="ai-question" id="ai-question">你现在在哪里？</div>
+          <p class="ai-hint" id="ai-hint">告诉我你想在什么环境下做操。</p>
+          <input class="ai-input" id="ai-scene-input" maxlength="120" placeholder="例如：办公室久坐，刚开完会">
+          <div class="ai-wizard-actions"><button class="quiet-button" id="ai-skip" type="button">跳过</button><button class="primary-button compact" id="ai-next" type="button" disabled>下一步</button></div>
+        </div>
+        <div id="ai-wizard-progress" hidden>
+          <div class="ai-progress-heading"><span class="eyebrow">GENERATING</span><strong id="ai-progress-title">正在编排你的操</strong></div>
+          <div class="ai-progress-track"><span id="ai-progress-fill"></span></div><div class="ai-progress-percent" id="ai-progress-percent">准备中 0%</div>
+          <div class="ai-log" id="ai-log"></div>
+          <button class="quiet-button" id="ai-cancel" type="button">取消生成</button>
+        </div>
+        <div id="ai-wizard-result" hidden>
+          <div class="result-mark">✓</div><div class="eyebrow">READY TO MOVE</div><h2 id="ai-result-name">你的新操</h2><p id="ai-result-summary">已经为你选好了动作和节奏。</p>
+          <div class="ai-result-actions"><button class="outline-button" id="ai-result-edit" type="button">进入编辑</button><button class="primary-button" id="ai-result-play" type="button">立即体验</button></div><button class="quiet-button" id="ai-result-retry" type="button">重新生成</button>
+        </div>
+        <div id="ai-wizard-error" hidden><div class="error-mark">!</div><h2>这次没有生成成功</h2><p id="ai-error-message">请重试一次。</p><div class="ai-result-actions"><button class="outline-button" id="ai-error-close" type="button">关闭</button><button class="primary-button" id="ai-error-retry" type="button">重试</button></div></div>
+      </dialog>
+
+      <section id="player-view" class="player-view" hidden aria-label="全屏做操播放页">
+        <div class="player-topbar">
+          <div class="player-routine-title"><span class="player-live-dot"></span><strong id="player-routine-name">测试操</strong><span id="player-section-name">第 1 节操</span></div>
+          <button class="player-exit" id="exit-player" type="button">退出全屏 <kbd>Esc</kbd></button>
+        </div>
+        <div class="player-center">
+          <div class="player-section-progress">
+            <span id="player-section-progress-label">第 1 节操 · 八拍 1 / 8</span>
+            <span id="player-frame-label">01 / 04</span>
+          </div>
+          <div class="player-progress-track"><span id="player-section-progress-fill"></span></div>
+          <div class="player-stage">
+            <div class="player-side-label left"><small>SECTION</small><strong id="player-section-number">01</strong></div>
+            <div class="player-image-wrap" id="player-image-wrap">
+              <img id="player-frame" alt="动作关键帧">
+              <div class="player-loading" id="player-loading">载入动作画面…</div>
+              <div class="player-cue-badge" id="player-cue-badge">1</div>
+            </div>
+            <div class="player-side-label right"><small>OVERALL</small><strong id="player-overall-number">0%</strong></div>
+          </div>
+          <div class="player-caption">
+            <div><span id="player-step-name">准备动作</span><strong id="player-instruction">准备开始</strong></div>
+            <span id="player-speed-label">1.0x</span>
+          </div>
+        </div>
+        <div class="player-controls-bar">
+          <button class="player-control-button" id="player-prev" type="button" aria-label="上一帧">‹</button>
+          <button class="player-play-button" id="player-toggle" type="button" aria-label="播放">▶</button>
+          <button class="player-control-button" id="player-next" type="button" aria-label="下一帧">›</button>
+          <div class="player-control-copy"><strong id="player-status">准备播放</strong><span id="player-overall-label">整套操 0 / 1</span></div>
+          <div class="player-channel-toggles">
+            <button class="player-audio-button" id="player-music" type="button" aria-label="切换背景音乐">音乐</button>
+            <button class="player-audio-button" id="player-audio" type="button" aria-label="切换语音播报">语音</button>
+          </div>
+        </div>
+        <div class="player-overall-track"><span id="player-overall-fill"></span></div>
+      </section>
+    </div>
+    <audio id="cue-audio" preload="auto"></audio>
+    <audio id="music-audio" preload="auto" loop></audio>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>

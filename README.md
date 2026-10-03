@@ -14,7 +14,7 @@ python app.py
 
 打开 <http://127.0.0.1:5000>。
 
-AI 自动编排需要在 `.env` 中填写真实的 `OPENAI_API_KEY`。`.env` 不应提交到版本库。
+AI 自动编排需要在 `.env` 中填写真实的 `OPENAI_API_KEY`。
 
 ## Included Assets
 

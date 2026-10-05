@@ -2,6 +2,8 @@
 
 爱做操是一个本地运行的 Flask Web App，用于创建、编辑和播放普通体操或眼保健操。系统包含动作关键帧、八拍节奏、语音口令、可选背景音乐，以及基于 OpenAI 兼容 API 的 AI 自动编排功能。
 
+<img width="2560" height="1322" alt="image" src="https://github.com/user-attachments/assets/1b814f2e-d138-4ea0-a711-9c9081c831b0" />
+
 ## Setup
 
 ```bash
